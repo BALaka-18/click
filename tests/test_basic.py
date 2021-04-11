@@ -103,93 +103,43 @@ def test_group_from_list(runner):
     result = runner.invoke(cli, ["sub"])
     assert result.output == "sub"
 
+@pytest.mark.parametrize(
+    ("default", "expect"),
+    [
+        ("no value", "FOO:[no value]"),
+        ("42","FOO:[42]"),
+        (None, "Option '--foo' requires an argument."),
+        ("","FOO:[]"),
+        ("\N{SNOWMAN}","FOO:[\N{SNOWMAN}]"),
+    ],
+)
+def test_basic_option(runner,default,expect):
+    param = click.Option(["--foo"],default=default)
 
-def test_basic_option(runner):
-    @click.command()
-    @click.option("--foo", default="no value")
-    def cli(foo):
-        click.echo(f"FOO:[{foo}]")
+    cli = click.Command("cli", params=[param], callback=lambda foo: foo)
+    result = runner.invoke(cli, standalone_mode=False)
+    # result = runner.invoke(cli, [])
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[no value]" in result.output
+    assert result.exception is None
+    assert result.return_value == expect
 
-    result = runner.invoke(cli, ["--foo=42"])
-    assert not result.exception
-    assert "FOO:[42]" in result.output
+@pytest.mark.parametrize(
+    ("default", "expect"),
+    [
+        ("42","FOO:[84]"),
+        ("23","FOO:[46]"),
+        ("bar","Invalid value for '--foo': 'bar' is not a valid integer."),
+    ],
+)
+def test_int_option(runner,default,expect):
+    param = click.Option(["--foo"],default=default)
 
-    result = runner.invoke(cli, ["--foo"])
-    assert result.exception
-    assert "Option '--foo' requires an argument." in result.output
+    cli = click.Command("cli", params=[param], callback=lambda foo: foo * 2)
+    result = runner.invoke(cli, standalone_mode=False)
+    # result = runner.invoke(cli, [])
 
-    result = runner.invoke(cli, ["--foo="])
-    assert not result.exception
-    assert "FOO:[]" in result.output
-
-    result = runner.invoke(cli, ["--foo=\N{SNOWMAN}"])
-    assert not result.exception
-    assert "FOO:[\N{SNOWMAN}]" in result.output
-
-
-def test_int_option(runner):
-    @click.command()
-    @click.option("--foo", default=42)
-    def cli(foo):
-        click.echo(f"FOO:[{foo * 2}]")
-
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[84]" in result.output
-
-    result = runner.invoke(cli, ["--foo=23"])
-    assert not result.exception
-    assert "FOO:[46]" in result.output
-
-    result = runner.invoke(cli, ["--foo=bar"])
-    assert result.exception
-    assert "Invalid value for '--foo': 'bar' is not a valid integer." in result.output
-
-
-def test_uuid_option(runner):
-    @click.command()
-    @click.option(
-        "--u", default="ba122011-349f-423b-873b-9d6a79c688ab", type=click.UUID
-    )
-    def cli(u):
-        assert type(u) is uuid.UUID
-        click.echo(f"U:[{u}]")
-
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "U:[ba122011-349f-423b-873b-9d6a79c688ab]" in result.output
-
-    result = runner.invoke(cli, ["--u=821592c1-c50e-4971-9cd6-e89dc6832f86"])
-    assert not result.exception
-    assert "U:[821592c1-c50e-4971-9cd6-e89dc6832f86]" in result.output
-
-    result = runner.invoke(cli, ["--u=bar"])
-    assert result.exception
-    assert "Invalid value for '--u': 'bar' is not a valid UUID." in result.output
-
-
-def test_float_option(runner):
-    @click.command()
-    @click.option("--foo", default=42, type=click.FLOAT)
-    def cli(foo):
-        assert type(foo) is float
-        click.echo(f"FOO:[{foo}]")
-
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[42.0]" in result.output
-
-    result = runner.invoke(cli, ["--foo=23.5"])
-    assert not result.exception
-    assert "FOO:[23.5]" in result.output
-
-    result = runner.invoke(cli, ["--foo=bar"])
-    assert result.exception
-    assert "Invalid value for '--foo': 'bar' is not a valid float." in result.output
+    assert result.exception is None
+    assert result.return_value == expect
 
 
 def test_boolean_option(runner):
