@@ -103,18 +103,19 @@ def test_group_from_list(runner):
     result = runner.invoke(cli, ["sub"])
     assert result.output == "sub"
 
+
 @pytest.mark.parametrize(
     ("default", "expect"),
     [
         ("no value", "FOO:[no value]"),
-        ("42","FOO:[42]"),
+        ("42", "FOO:[42]"),
         (None, "Option '--foo' requires an argument."),
-        ("","FOO:[]"),
-        ("\N{SNOWMAN}","FOO:[\N{SNOWMAN}]"),
+        ("", "FOO:[]"),
+        ("\N{SNOWMAN}", "FOO:[\N{SNOWMAN}]"),
     ],
 )
-def test_basic_option(runner,default,expect):
-    param = click.Option(["--foo"],default=default)
+def test_basic_option(runner, default, expect):
+    param = click.Option(["--foo"], default=default)
 
     cli = click.Command("cli", params=[param], callback=lambda foo: foo)
     result = runner.invoke(cli, standalone_mode=False)
@@ -123,16 +124,17 @@ def test_basic_option(runner,default,expect):
     assert result.exception is None
     assert result.return_value == expect
 
+
 @pytest.mark.parametrize(
     ("default", "expect"),
     [
-        ("42","FOO:[84]"),
-        ("23","FOO:[46]"),
-        ("bar","Invalid value for '--foo': 'bar' is not a valid integer."),
+        ("42", "FOO:[84]"),
+        ("23", "FOO:[46]"),
+        ("bar", "Invalid value for '--foo': 'bar' is not a valid integer."),
     ],
 )
-def test_int_option(runner,default,expect):
-    param = click.Option(["--foo"],default=default)
+def test_int_option(runner, default, expect):
+    param = click.Option(["--foo"], default=default)
 
     cli = click.Command("cli", params=[param], callback=lambda foo: foo * 2)
     result = runner.invoke(cli, standalone_mode=False)
