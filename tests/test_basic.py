@@ -123,7 +123,7 @@ def test_basic_option(runner,values,expect):
     result = runner.invoke(cli, [values])
 
     assert result.exception is None
-    assert result.return_value == expect
+    assert result.output == expect
 
 @pytest.mark.parametrize(
     ("values", "expect"),
@@ -142,10 +142,18 @@ def test_int_option(runner,values,expect):
     result = runner.invoke(cli, [values])
 
     assert result.exception is None
-    assert result.return_value == expect
+    assert result.output == expect
 
 
-def test_uuid_option(runner):
+@pytest.mark.parametrize(
+    ("values", "expect"),
+    [
+        ("--u=ba122011-349f-423b-873b-9d6a79c688ab","U:[ba122011-349f-423b-873b-9d6a79c688ab]"),
+        ("--u=821592c1-c50e-4971-9cd6-e89dc6832f86","U:[821592c1-c50e-4971-9cd6-e89dc6832f86]"),
+        ("--u=bar","Invalid value for '--u': 'bar' is not a valid UUID."),
+    ],
+)
+def test_uuid_option(runner,values,expect):
     @click.command()
     @click.option(
         "--u", default="ba122011-349f-423b-873b-9d6a79c688ab", type=click.UUID
@@ -154,37 +162,31 @@ def test_uuid_option(runner):
         assert type(u) is uuid.UUID
         click.echo(f"U:[{u}]")
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "U:[ba122011-349f-423b-873b-9d6a79c688ab]" in result.output
+    result = runner.invoke(cli, [values])
 
-    result = runner.invoke(cli, ["--u=821592c1-c50e-4971-9cd6-e89dc6832f86"])
-    assert not result.exception
-    assert "U:[821592c1-c50e-4971-9cd6-e89dc6832f86]" in result.output
-
-    result = runner.invoke(cli, ["--u=bar"])
-    assert result.exception
-    assert "Invalid value for '--u': 'bar' is not a valid UUID." in result.output
+    assert result.exception is None
+    assert result.output == expect
 
 
-def test_float_option(runner):
+@pytest.mark.parametrize(
+    ("values", "expect"),
+    [
+        ("--foo=42.0","FOO:[42.0]"),
+        ("--foo=23.5","FOO:[23.5]"),
+        ("--foo=bar","Invalid value for '--foo': 'bar' is not a valid float."),
+    ],
+)
+def test_float_option(runner,values,expect):
     @click.command()
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
         assert type(foo) is float
-        click.echo(f"FOO:[{foo}]")
+        click.echo("FOO:[{}]".format(foo))
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[42.0]" in result.output
+    result = runner.invoke(cli, [values])
 
-    result = runner.invoke(cli, ["--foo=23.5"])
-    assert not result.exception
-    assert "FOO:[23.5]" in result.output
-
-    result = runner.invoke(cli, ["--foo=bar"])
-    assert result.exception
-    assert "Invalid value for '--foo': 'bar' is not a valid float." in result.output
+    assert result.exception is None
+    assert result.output == expect
 
 
 def test_boolean_option(runner):
