@@ -108,37 +108,36 @@ def test_group_from_list(runner):
     ("values", "expect"),
     [
         ("--foo=no value", "FOO:[no value]"),
-        ("--foo=42", "FOO:[42]"),
+        ("--foo=42","FOO:[42]"),
         ("--foo", "Option '--foo' requires an argument."),
-        ("--foo=", "FOO:[]"),
-        ("--foo=\N{SNOWMAN}", "FOO:[\N{SNOWMAN}]"),
+        ("--foo=","FOO:[]"),
+        ("--foo=\N{SNOWMAN}","FOO:[\N{SNOWMAN}]"),
     ],
 )
-def test_basic_option(runner, values, expect):
+def test_basic_option(runner,values,expect):
     @click.command()
     @click.option("--foo", default="no value")
     def cli(foo):
-        click.echo(f"FOO:[{foo}]")
+        click.echo("FOO:[{}]".format(foo))
 
     result = runner.invoke(cli, [values])
 
     assert result.exception is None
     assert result.output == expect
 
-
 @pytest.mark.parametrize(
     ("values", "expect"),
     [
-        ("--foo=42", "FOO:[84]"),
-        ("--foo=23", "FOO:[46]"),
-        ("--foo=bar", "Invalid value for '--foo': 'bar' is not a valid integer."),
+        ("--foo=42","FOO:[84]"),
+        ("--foo=23","FOO:[46]"),
+        ("--foo=bar","Invalid value for '--foo': 'bar' is not a valid integer."),
     ],
 )
-def test_int_option(runner, values, expect):
+def test_int_option(runner,values,expect):
     @click.command()
     @click.option("--foo", default="no value")
     def cli(foo):
-        click.echo(f"FOO:[{foo * 2}]")
+        click.echo("FOO:[{}]".format(foo * 2))
 
     result = runner.invoke(cli, [values])
 
